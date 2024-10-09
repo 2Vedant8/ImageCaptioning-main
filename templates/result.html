@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result - Image Captioning</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        .formula {
+            background-color: #f9fafb;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <header class="bg-blue-600 w-full text-white p-6 text-center">
+        <h1 class="text-4xl font-bold">Image Captioning Result</h1>
+    </header>
+
+    <main class="container mx-auto p-6 bg-white shadow-md rounded-lg mt-6 w-full max-w-4xl">
+        <h2 class="text-2xl font-bold">Generated Caption</h2>
+        <p class="mt-2 text-gray-700">{{ generated_caption }}</p>
+        
+        <h3 class="text-xl font-bold mt-4">Evaluation Metrics</h3>
+        <ul class="list-disc list-inside mt-2 text-gray-700">
+            <li><strong>BLEU Score:</strong> {{ bleu_1 }}</li>
+            <li><strong>ROUGE-L Score:</strong> {{ rouge_l }}</li>
+            <li><strong>Audio Caption:</strong>
+                <audio controls class="w-full mt-2">
+                    <source src="{{ audio_url }}" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+            </li>
+        </ul>
+
+        <h3 class="text-xl font-bold mt-6">Uploaded Image</h3>
+        <img src="{{ url_for('uploaded_file', filename=filename) }}" alt="Uploaded Image" class="mt-4 rounded-lg shadow-lg w-full object-cover" />
+
+        <h3 class="text-xl font-bold mt-6">Scientific Overview</h3>
+        <h4 class="text-lg font-bold mt-4">Model Architecture</h4>
+        <p class="mt-2 text-gray-600">
+            The image captioning model is built on a Transformer architecture, integrating components from established deep learning frameworks. 
+            The architecture includes an image encoder and a text decoder:
+        </p>
+        <ul class="list-disc list-inside mt-2 text-gray-600">
+            <li>
+                <strong>Image Encoder:</strong> A Convolutional Neural Network (CNN) is employed to extract high-level feature representations from input images. While the architecture may include 
+                layers inspired by popular models such as ResNet, it has been customized to meet the specific needs of our image captioning tasks.
+            </li>
+            <li>
+                <strong>Text Decoder:</strong> A Long Short-Term Memory (LSTM) network is utilized to generate natural language captions based on the extracted features. 
+                This decoder is trained to predict the next word in a sequence, effectively forming coherent sentences that describe the images.
+            </li>
+        </ul>
+        <p class="mt-2 text-gray-600">
+            This model has been developed and fine-tuned with a focus on optimizing performance for image captioning tasks. The combination of CNN for image feature extraction and 
+            LSTM for caption generation allows the model to effectively learn from training data, resulting in improved accuracy and fluency in generated captions.
+        </p>
+
+        <h4 class="text-lg font-bold mt-4">Loss Functions</h4>
+        <p class="mt-2 text-gray-600">
+            The training objective is to minimize the negative log-likelihood of the correct captions. The loss function used here is a variation of the NT-Xent loss (Normalized Temperature-scaled Cross Entropy Loss), which enhances the similarity between matched images and captions. This is combined with hardest negative sampling:
+        </p>
+        <p class="formula">
+            $$L = - \log \left( \frac{ \exp \left( \frac{z_i \cdot z_j}{\tau} \right) }{ \sum \exp \left( \frac{z_i \cdot z_k}{\tau} \right) } \right)$$
+        </p>
+        <p class="mt-2 text-gray-600">
+            where <br>
+            \( z_i = f(x_i) \), &nbsp; \( z_j = g(y_j) \), <br>
+            and \( \tau \) (tau) is the temperature parameter.
+        </p>
+
+        <h4 class="text-lg font-bold mt-4">BLEU Score</h4>
+        <p class="mt-2 text-gray-600">
+            BLEU (Bilingual Evaluation Understudy) is a metric for evaluating a generated sentence against a reference sentence. The BLEU-1 score considers unigram matches. It’s calculated using the following formula:
+        </p>
+        <p class="formula">
+            $$\text{BLEU} = \text{BP} \cdot \exp\left( \sum (w_n \cdot \log p_n) \right)$$
+        </p>
+        <p class="mt-2 text-gray-600">
+            where <br>
+            BP = Brevity Penalty, <br>
+            \( p_n \) = precision for n-grams.
+        </p>
+
+        <h4 class="text-lg font-bold mt-4">ROUGE Score</h4>
+        <p class="mt-2 text-gray-600">
+            The ROUGE-L metric focuses on the longest common subsequence (LCS) between the reference and generated captions. The formula for ROUGE-L is:
+        </p>
+        <p class="formula">
+            $$\text{ROUGE-L} = \frac{(1 + \beta^2) \cdot (R \cdot P)}{R + \beta^2 \cdot P}$$
+        </p>
+        <p class="mt-2 text-gray-600">
+            where <br>
+            \( R \) = Recall, &nbsp; \( P \) = Precision, <br>
+            \( \beta \) = parameter balancing \( R \) and \( P \).
+        </p>
+
+        <h4 class="text-lg font-bold mt-4">Training Details</h4>
+        <p class="mt-2 text-gray-600">
+            The model is trained on the Flickr8k dataset using techniques from the SimCLR and VSE++ frameworks. Hardest negative sampling is employed, where for each positive example, the model selects the most challenging negative example to optimize. This improves the model's ability to distinguish between correct and incorrect matches during training.
+        </p>
+    </main>
+
+    <footer class="w-full bg-gray-800 text-white text-center py-4 mt-6">
+        <p>&copy; 2024. Image Captioning Research Demonstration. All rights reserved.</p>
+    </footer>
+</body>
+</html>

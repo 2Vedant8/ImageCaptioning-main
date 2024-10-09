@@ -1,0 +1,9 @@
+Flask
+torch
+nltk
+sacrebleu
+pyttsx3
+matplotlib
+Pillow
+rouge-score
+meteor
